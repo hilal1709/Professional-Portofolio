@@ -5,6 +5,7 @@ import { Banner } from "@/components/feedback/Banner";
 import { db, experiences, gallery, messages, milestones, projects, skills } from "@/lib/db";
 import { storageReady } from "@/lib/storage";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Ringkasan" };
 
 const fmt = new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Jakarta" });
@@ -12,14 +13,13 @@ const fmt = new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "
 export default async function AdminHome() {
   const tally = async (t: PgTable) => (await db.select({ value: count() }).from(t))[0].value;
 
-  const [p, s, m, e, g, latest] = await Promise.all([
-    tally(projects),
-    tally(skills),
-    tally(milestones),
-    tally(experiences),
-    tally(gallery),
-    db.select().from(messages).orderBy(desc(messages.createdAt)).limit(5),
-  ]);
+  // Berurutan: query paralel macet lewat transaction pooler.
+  const p = await tally(projects);
+  const s = await tally(skills);
+  const m = await tally(milestones);
+  const e = await tally(experiences);
+  const g = await tally(gallery);
+  const latest = await db.select().from(messages).orderBy(desc(messages.createdAt)).limit(5);
 
   const stats = [
     ["Proyek", p, "/admin/projects"],

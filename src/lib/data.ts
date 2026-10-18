@@ -13,15 +13,14 @@ import {
 } from "@/lib/db";
 
 export async function getHomeData() {
-  const [prof, chs, ms, sk, pr, ex, gl] = await Promise.all([
-    db.select().from(profile).limit(1),
-    db.select().from(chapters).orderBy(asc(chapters.sortOrder)),
-    db.select().from(milestones).orderBy(asc(milestones.sortOrder)),
-    db.select().from(skills).orderBy(asc(skills.sortOrder)),
-    db.select().from(projects).orderBy(asc(projects.sortOrder)),
-    db.select().from(experiences).orderBy(asc(experiences.sortOrder)),
-    db.select().from(gallery).orderBy(asc(gallery.sortOrder)),
-  ]);
+  // Berurutan, bukan Promise.all: query paralel/pipelined macet lewat transaction pooler Supabase.
+  const prof = await db.select().from(profile).limit(1);
+  const chs = await db.select().from(chapters).orderBy(asc(chapters.sortOrder));
+  const ms = await db.select().from(milestones).orderBy(asc(milestones.sortOrder));
+  const sk = await db.select().from(skills).orderBy(asc(skills.sortOrder));
+  const pr = await db.select().from(projects).orderBy(asc(projects.sortOrder));
+  const ex = await db.select().from(experiences).orderBy(asc(experiences.sortOrder));
+  const gl = await db.select().from(gallery).orderBy(asc(gallery.sortOrder));
 
   const chapterMap = Object.fromEntries(chs.map((c) => [c.key, c])) as Record<string, Chapter | undefined>;
 
