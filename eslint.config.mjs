@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Komponen Aceternity disalin apa adanya dari registry.
+    "src/components/ui/**",
+    ".agents/**",
   ]),
 ]);
 

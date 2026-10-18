@@ -1,26 +1,239 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
+/*
+  Dunia visual: "Sehari di Gresik".
+  Kertas hangat + merah kemeja SISFOR + khaki celana cargo + abu semen.
+  Langit (--sky-*) diubah GSAP sepanjang scroll: pagi → siang → senja → malam.
+*/
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, monospace;
+  --font-heading: var(--font-display);
+
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-sisfor: var(--sisfor);
+  --color-sisfor-deep: var(--sisfor-deep);
+  --color-khaki: var(--khaki);
+  --color-khaki-deep: var(--khaki-deep);
+  --color-cement: var(--cement);
+  --color-leaf: var(--leaf);
+  --color-dusk: var(--dusk);
+  --color-night: var(--night);
+  --color-moon: var(--moon);
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --paper: #f5eee2;
+  --paper-deep: #eadfcb;
+  --ink: #221c18;
+  --ink-soft: #5a4e45;
+  --sisfor: #a3191f;
+  --sisfor-deep: #7a1116;
+  --khaki: #cdb994;
+  --khaki-deep: #a8936c;
+  --cement: #8f8b85;
+  --leaf: #5f7d4f;
+  --dusk: #3b2a4d;
+  --night: #141a33;
+  --moon: #f3ead2;
+
+  --sky-top: #9fd0ef;
+  --sky-bottom: #f9e7c8;
+  --sun: #ffd36b;
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: #fbf7f0;
+  --card-foreground: var(--ink);
+  --popover: #fbf7f0;
+  --popover-foreground: var(--ink);
+  --primary: var(--sisfor);
+  --primary-foreground: #fff8f0;
+  --secondary: var(--paper-deep);
+  --secondary-foreground: var(--ink);
+  --muted: var(--paper-deep);
+  --muted-foreground: var(--ink-soft);
+  --accent: #f1e3cc;
+  --accent-foreground: var(--ink);
+  --destructive: #b42318;
+  --border: #ddd0bb;
+  --input: #d6c8b1;
+  --ring: var(--sisfor);
+  --radius: 0.875rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    scrollbar-color: var(--sisfor) var(--paper-deep);
+  }
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+    letter-spacing: -0.025em;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  ::selection {
+    background: var(--sisfor);
+    color: #fff8f0;
+  }
+  :focus-visible {
+    outline: 3px solid var(--sisfor);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+  a {
+    text-underline-offset: 0.2em;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--paper-deep);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--sisfor);
+    border-radius: 999px;
+    border: 2px solid var(--paper-deep);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Langit tetap di belakang seluruh cerita. */
+.sky {
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 100%);
+}
+
+/* Bagian tubuh maskot berputar dari sendinya. */
+.mascot .arm,
+.mascot .leg {
+  transform-box: fill-box;
+  transform-origin: 50% 6%;
+}
+.mascot .eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.mascot .body-bob {
+  transform-box: view-box;
+  transform-origin: 50% 100%;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes cloud-drift {
+  from { transform: translateX(-6vw); }
+  to { transform: translateX(6vw); }
+}
+.cloud-drift { animation: cloud-drift 22s ease-in-out infinite alternate; }
+.cloud-drift-slow { animation: cloud-drift 34s ease-in-out infinite alternate-reverse; }
+
+@keyframes smoke-rise {
+  0% { transform: translate(0, 0) scale(0.9); opacity: 0.75; }
+  100% { transform: translate(18px, -26px) scale(1.15); opacity: 0.25; }
+}
+.smoke { animation: smoke-rise 4.5s ease-out infinite alternate; transform-box: fill-box; }
+
+/* ---------- Toast & modal ---------- */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+@keyframes toast-out {
+  to { opacity: 0; transform: translateX(24px) scale(0.96); }
+}
+@keyframes toast-timer {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
+}
+.toast-in { animation: toast-in 380ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.toast-out { animation: toast-out 220ms ease-in both; }
+.toast-timer { animation: toast-timer linear forwards; }
+
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+dialog.modal-panel[open] { animation: modal-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+dialog.modal-panel[open]::backdrop { animation: backdrop-in 300ms ease-out both; }
+
+/* ---------- Panggung cerita ---------- */
+/* Bingkai depan ikut gelap saat malam (variabel --stars diatur SkyBackdrop). */
+.fg-tone { filter: brightness(calc(1 - var(--stars, 0) * 0.65)) saturate(calc(1 - var(--stars, 0) * 0.4)); }
+.story-stage .scene { will-change: transform, opacity; }
+
+/* prefers-reduced-motion: tanpa pin/scroll halus — babak disusun bertumpuk biasa. */
+.stage-static { height: auto !important; overflow: visible !important; }
+.stage-static > .scene { position: relative; inset: auto; min-height: 100dvh; overflow-x: auto; }
+/* Babak Pengalaman di layar pendek: item timeline bergantian di tempat yang sama. */
+.xp-stack { display: grid !important; }
+.xp-stack > span { display: none !important; }
+.xp-stack > .xp-item { padding-bottom: 0 !important; }
+
+/* TextGenerateEffect: kata muncul bergantian (pengganti motion/react). */
+@keyframes tg-in {
+  from { opacity: 0; filter: blur(10px); }
+  to { opacity: 1; filter: blur(0); }
+}
+.tg-word { opacity: 0; animation: tg-in 0.5s ease-out forwards; }
+.tg-word-nofilter { animation-name: backdrop-in; }
+@media (prefers-reduced-motion: reduce) {
+  .tg-word { opacity: 1; animation: none; }
 }
