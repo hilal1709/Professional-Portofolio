@@ -7,7 +7,7 @@ const globalForDb = globalThis as unknown as { sql?: ReturnType<typeof postgres>
 
 const sql =
   globalForDb.sql ??
-  postgres(process.env.DATABASE_URL!, { ssl: "require", max: 5, prepare: false });
+  postgres(process.env.DATABASE_URL!, { ssl: "require", max: 5, prepare: false, connect_timeout: 15, idle_timeout: 20 });
 
 if (process.env.NODE_ENV !== "production") globalForDb.sql = sql;
 

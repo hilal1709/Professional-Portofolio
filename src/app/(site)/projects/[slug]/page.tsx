@@ -7,17 +7,12 @@ import { notFound } from "next/navigation";
 import { AosInit } from "@/components/AosInit";
 import { MascotSvg } from "@/components/mascot/MascotSvg";
 import { ProjectCover } from "@/components/ProjectCover";
-import { getProject, getProjectSlugs } from "@/lib/data";
+import { getProject } from "@/lib/data";
 
 export const revalidate = 3600;
 
-export async function generateStaticParams() {
-  try {
-    return await getProjectSlugs();
-  } catch {
-    return [];
-  }
-}
+// Tanpa generateStaticParams: halaman proyek dirender saat request pertama lalu di-cache (ISR),
+// sehingga build tidak membutuhkan koneksi database.
 
 export async function generateMetadata({ params }: PageProps<"/projects/[slug]">): Promise<Metadata> {
   const { slug } = await params;

@@ -3,8 +3,8 @@ import { StoryChrome } from "@/components/story/StoryChrome";
 import { StoryStage } from "@/components/story/stage/StoryStage";
 import { getHomeData } from "@/lib/data";
 
-// Konten berubah lewat CMS (revalidatePath), selebihnya disegarkan tiap jam.
-export const revalidate = 3600;
+// Dirender saat request (bukan saat build) supaya build tidak bergantung pada koneksi database.
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const data = await getHomeData();
