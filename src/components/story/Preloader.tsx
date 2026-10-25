@@ -41,7 +41,8 @@ export function Preloader() {
       seen = Boolean(sessionStorage.getItem(PRELOADER_SEEN_KEY));
     } catch {}
     if (seen) {
-      // Sudah disembunyikan CSS (.preloader-skip); lepas dari DOM supaya maskotnya tidak terus beranimasi.
+      // Sembunyikan lewat CSS (.preloader-skip) lalu lepas dari DOM supaya maskotnya tidak terus beranimasi.
+      document.documentElement.classList.add("preloader-skip");
       queueMicrotask(() => setGone(true));
       finish();
       return;

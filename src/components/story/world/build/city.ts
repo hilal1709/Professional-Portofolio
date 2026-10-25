@@ -19,6 +19,7 @@ import { matrixOf, Parts, seeded } from "../geo";
 import type { Quality } from "../quality";
 import { POINTS } from "../stations";
 import { BUSH_KINDS, buildGrass, FLOWER_KINDS, scatter, TREE_KINDS, type Spot } from "./nature";
+import { buildScenery } from "./scenery";
 
 export type Glow = { mat: MeshBasicMaterial; base: Color; night: number };
 
@@ -104,6 +105,8 @@ export function buildCity(mat: Material, foliage: Material, models: Models, q: Q
   group.add(scatter(models, BUSH_KINDS, pick(q.mobile ? 16 : 30, [-40, 45], [-20, -60]), foliage, { scale: 2.4, seed: 6 }));
   group.add(scatter(models, FLOWER_KINDS, pick(q.mobile ? 30 : 70, [-30, 40], [-12, -40]), foliage, { scale: 2.2, seed: 7, shadows: false }));
   group.add(scatter(models, ["rock_largeA", "rock_smallA", "stone_smallB"], pick(10, [-40, 45], [-14, -60]), mat, { scale: 2.5, seed: 8 }));
+
+  group.add(buildScenery(mat, foliage, models, q));
 
   if (q.grass) {
     const g = buildGrass(q.grass, (r) => {
