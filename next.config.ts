@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/images/:path*", headers: [{ key: "Cache-Control", value: week }] },
       { source: "/audio/:path*", headers: [{ key: "Cache-Control", value: week }] },
+      { source: "/models/:path*", headers: [{ key: "Cache-Control", value: week }] },
     ];
   },
   turbopack: {

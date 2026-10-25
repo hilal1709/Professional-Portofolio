@@ -3,16 +3,17 @@ import {
   DirectionalLight,
   Group,
   HemisphereLight,
-  IcosahedronGeometry,
   Mesh,
-  MeshLambertMaterial,
-  OctahedronGeometry,
+  MeshStandardMaterial,
+  NeutralToneMapping,
   PerspectiveCamera,
   Scene,
+  SphereGeometry,
   TorusGeometry,
   WebGLRenderer,
   type BufferGeometry,
 } from "three";
+import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { seeded } from "./geo";
 
 /**
@@ -20,8 +21,9 @@ import { seeded } from "./geo";
  * Memakai chunk three yang sama dengan dunia utama; tanpa aset unduhan.
  */
 export function createMiniScene(canvas: HTMLCanvasElement, color: string) {
-  const renderer = new WebGLRenderer({ canvas, antialias: (window.devicePixelRatio || 1) <= 1, alpha: true, powerPreference: "low-power" });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "low-power" });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.toneMapping = NeutralToneMapping;
   const scene = new Scene();
   const camera = new PerspectiveCamera(40, 1, 0.1, 100);
   camera.position.set(0, 0, 14);
@@ -32,8 +34,9 @@ export function createMiniScene(canvas: HTMLCanvasElement, color: string) {
 
   const base = new Color(color);
   const tones = [base, base.clone().lerp(new Color("#ffffff"), 0.45), new Color("#f5eee2"), new Color("#221c18"), new Color("#cdb994")];
-  const geos: BufferGeometry[] = [new IcosahedronGeometry(1, 0), new OctahedronGeometry(1, 0), new TorusGeometry(0.8, 0.32, 6, 12)];
-  const mats = tones.map((c) => new MeshLambertMaterial({ color: c, flatShading: true }));
+  // Bentuk halus & membulat (gaya yang sama dengan dunia 3D di beranda).
+  const geos: BufferGeometry[] = [new SphereGeometry(1, 32, 20), new RoundedBoxGeometry(1.5, 1.5, 1.5, 4, 0.35), new TorusGeometry(0.8, 0.32, 24, 48)];
+  const mats = tones.map((c) => new MeshStandardMaterial({ color: c, roughness: 0.6 }));
   const rand = seeded(19);
   const group = new Group();
   const items = Array.from({ length: 14 }, (_, i) => {

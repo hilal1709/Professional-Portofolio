@@ -3,6 +3,7 @@
 import gsap from "gsap";
 import { useEffect, useRef } from "react";
 import { sceneStore } from "../stage/sceneStore";
+import { degrade, pickQuality } from "./quality";
 import { rig, skyState, WORLD_READY, worldFlags } from "./rig";
 import { ZONES, type Zone } from "./stations";
 
@@ -40,10 +41,16 @@ export function World3D() {
     };
 
     import("./engine")
-      .then(({ createWorld }) => {
-        if (disposed) return;
-        const mobile = window.innerWidth < 768;
-        world = createWorld(canvas, { mobile });
+      // Jangan membuat dunia bila efek sudah dibersihkan (StrictMode): kanvasnya dipakai ulang oleh efek berikutnya,
+      // dan dispose() akan mematikan konteks WebGL milik kanvas itu.
+      .then(({ createWorld }) => (disposed ? null : createWorld(canvas, pickQuality())))
+      .then((created) => {
+        if (!created) return;
+        if (disposed) {
+          created.dispose();
+          return;
+        }
+        world = created;
         onResize();
 
         const syncZones = () => {
@@ -51,9 +58,13 @@ export function World3D() {
           // Babak aktif + tetangganya, supaya transisi kamera tidak menampilkan dunia kosong.
           const keys = [scenes[active - 1], scenes[active], scenes[active + 1]].filter(Boolean).map((s) => s!.key);
           const list = new Set<Zone>(keys.length ? keys.flatMap((k) => ZONES[k]) : ZONES.hero);
-          // Ransel hanya tampil saat kamera di dalamnya (dari luar ia cuma bola gelap di kejauhan).
-          if (scenes[active]?.key !== "skills") list.delete("pack");
-          world!.setZones([...list]);
+          // Ransel hanya tampil saat kamera di dalamnya (dari luar ia cuma bola gelap di kejauhan),
+          // dan selama di dalam ransel dunia luar tidak perlu digambar sama sekali.
+          if (scenes[active]?.key === "skills") {
+            list.clear();
+            list.add("pack");
+          } else list.delete("pack");
+          world!.setZones([...list], scenes[active]?.key);
         };
         syncZones();
         unsubscribe = sceneStore.subscribe(syncZones);
@@ -74,15 +85,15 @@ export function World3D() {
           lastAmbient = time;
           world.render(rig, skyState, time, pointer.cx, pointer.cy);
 
-          // Kualitas adaptif: turunkan pixel ratio bila frame berturut-turut lambat.
+          // Kualitas adaptif: bila frame berturut-turut lambat, turunkan bertahap (post → bayangan → resolusi).
           const dt = time - prev;
           prev = time;
           if (moved && dt > 0 && dt < 0.2) {
             if (dt > 1 / 40) slow++;
             else if (dt < 1 / 55) fast++;
-            if (slow > 45 && world.pixelRatio > 0.75) {
-              world.setPixelRatio(Math.max(0.75, world.pixelRatio - 0.25));
-              onResize();
+            if (slow > 45) {
+              const next = degrade(world.quality);
+              if (next) world.setQuality(next);
               slow = fast = 0;
             } else if (fast > 240) slow = fast = 0;
           }

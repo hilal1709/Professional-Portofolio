@@ -36,6 +36,7 @@
     "motion": "^14.3.0",
     "next": "16.4.2",
     "postgres": "^3.4.9",
+    "postprocessing": "^6.39.5",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "remotion": "^4.0.536",
@@ -48,6 +49,9 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
     "@remotion/cli": "^4.0.536",
     "@tailwindcss/turbopack": "^4",
     "@types/aos": "^3.0.8",
@@ -59,6 +63,7 @@
     "drizzle-kit": "^0.31.11",
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
+    "meshoptimizer": "^0.22.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5"
