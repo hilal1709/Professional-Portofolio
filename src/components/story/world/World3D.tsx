@@ -9,6 +9,8 @@ import { ZONES, type Zone } from "./stations";
 
 function fail() {
   worldFlags.failed = true;
+  // Baru sekarang lanskap 2D cadangan boleh tampil (lihat globals.css).
+  document.documentElement.classList.add("world-off");
   window.dispatchEvent(new CustomEvent(WORLD_READY, { detail: { ok: false } }));
 }
 
@@ -29,6 +31,8 @@ export function World3D() {
     }
 
     let disposed = false;
+    // Jaring pengaman: dunia terlalu lama dimuat → izinkan lanskap 2D tampil sementara.
+    const giveUp = window.setTimeout(() => document.documentElement.classList.add("world-off"), 12000);
     let world: import("./engine").World | null = null;
     let tick: ((time: number) => void) | null = null;
     let unsubscribe = () => {};
@@ -115,6 +119,7 @@ export function World3D() {
 
     return () => {
       disposed = true;
+      window.clearTimeout(giveUp);
       if (tick) gsap.ticker.remove(tick);
       unsubscribe();
       window.removeEventListener("resize", onResize);

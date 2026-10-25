@@ -48,7 +48,7 @@ export function JourneyScene({ chapter, milestones }: { chapter?: Chapter; miles
                 <h3 className="mt-3 font-display text-xl font-bold leading-tight text-ink sm:text-2xl">{m.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-ink-soft sm:text-base">{m.description}</p>
               </div>
-              <div className="mx-auto h-[10vh] w-3 rounded-b bg-[#7a5a3c]" aria-hidden />
+              <div className="journey-pole mx-auto h-[10vh] w-3 rounded-b bg-[#7a5a3c]" aria-hidden />
             </div>
           </div>
         ))}

@@ -227,9 +227,15 @@ dialog.modal-panel[open]::backdrop { animation: backdrop-in 300ms ease-out both;
 .world-canvas { opacity: 0; transition: opacity 0.9s ease-out; }
 .world-on .world-canvas { opacity: 1; }
 .world-on .story-stage .cam { visibility: hidden; }
-/* Selubung krem tipis: ruang 3D tetap terlihat, teks tetap terbaca. */
-.world-on .about-room { background: radial-gradient(120% 90% at 50% 10%, rgb(251 243 228 / 0.82) 0%, rgb(234 223 203 / 0.7) 70%, rgb(220 203 176 / 0.45) 100%); }
+/* Ruang 3D dibiarkan tampil penuh (tanpa selubung krem); teks terbaca lewat kartu kaca di belakangnya. */
+.world-on .about-room { background: none; }
+.world-on .about-card { padding: clamp(1rem, 2.4vw, 2rem); border-radius: 28px; background: rgb(251 243 228 / 0.88); box-shadow: 0 30px 70px -30px rgb(34 28 24 / 0.55); backdrop-filter: blur(10px); }
 .world-on .journey-ground { display: none; }
+/* Tiang papan milestone memanjang sampai menyentuh jalan 3D. */
+.world-on .journey-pole { height: 17vh; margin-bottom: -7vh; }
+/* Sebelum dunia 3D siap (mis. saat refresh), jangan tampilkan lanskap 2D lama: tunggu 3D, atau 2D hanya bila 3D gagal (.world-off). */
+html:not(.world-on):not(.world-off) :is(.story-stage .cam, .sky > *, .journey-ground) { visibility: hidden; }
+html:not(.world-on):not(.world-off) .about-room { background: none; }
 .world-on .skills-bg { opacity: var(--bag, 1); }
 
 /* Preloader sudah pernah tampil di sesi ini (diset skrip inline sebelum hidrasi). */

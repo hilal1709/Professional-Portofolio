@@ -125,6 +125,11 @@ export function StoryStage({ data }: { data: HomeData }) {
     };
   }, []);
 
+  // Tanpa dunia 3D (reduced motion) lanskap 2D adalah satu-satunya latar.
+  useEffect(() => {
+    if (reduced) document.documentElement.classList.add("world-off");
+  }, [reduced]);
+
   // Scroll halus (inersia) untuk seluruh cerita.
   useGSAP(
     () => {
