@@ -19,7 +19,7 @@ import type { Models } from "../assets";
 import { matrixOf, Parts, seeded, sharedTime } from "../geo";
 import type { Quality } from "../quality";
 import { POINTS } from "../stations";
-import type { Glow } from "./city";
+import { cart, wire, type Glow } from "./city";
 import { BUSH_KINDS, buildGrass, FLOWER_KINDS, scatter, TREE_KINDS, type Spot } from "./nature";
 
 const ROAD_Z = -132;
@@ -36,11 +36,34 @@ export function buildRoad(mat: Material, foliage: Material, models: Models, q: Q
     p.cyl(0.09, 0.13, 5, "#4a4038", { x, y: 2.5, z: z + 3.4 }, 12).box(1.3, 0.14, 0.2, "#4a4038", { x: x + 0.55, y: 5, z: z + 3.4 }, 0.06);
     bulbs.ball(0.3, "#ffe3a3", { x: x + 1.05, y: 4.75, z: z + 3.4 }, 14, 10);
   }
+  const rand = seeded(31);
+  // Di balik pagar: tiang listrik + kabel, rambu, gerobak; lebih jauh lagi rumah & warung di balik pepohonan.
+  // (Sisi dekat dibiarkan lapang supaya tidak menutupi judul & papan milestone.)
+  const back = z - 6.2;
+  for (let x = -24; x < 250; x += 20) {
+    p.cyl(0.14, 0.18, 7, "#8e8981", { x, y: 3.5, z: back }, 10).box(1.8, 0.14, 0.14, "#8e8981", { x, y: 6.6, z: back }, 0.04);
+    if (x + 20 < 250) [-0.7, 0.7].forEach((dz) => wire(p, x, x + 20, 6.65, back + dz, 1.1));
+  }
+  [12, 96, 180].forEach((x, i) => p.cyl(0.07, 0.07, 2.6, "#8e8981", { x, y: 1.3, z: back + 0.6 }, 8).box(1.1, 0.8, 0.08, ["#2f6f4f", "#f2c14e", "#2f6f4f"][i], { x, y: 2.8, z: back + 0.6 }, 0.06));
+  [40, 140, 220].forEach((x, i) => cart(p, x + 6, z - 8.6 - (i % 2) * 0.6, ["#d2453b", "#5b7bd1", "#f2c14e"][i]));
+  const walls = ["#ecdcc0", "#f1e4cc", "#e3cfae", "#f4eadb"];
+  const roofs = ["#c2453b", "#a3191f", "#d9783c", "#b2252b"];
+  const win = new Parts();
+  for (let x = -36; x < 255; x += 11 + rand() * 9) {
+    if (rand() < 0.25) continue;
+    const s = 0.9 + rand() * 0.5;
+    const hz = z - 30 - rand() * 14;
+    const w = 4.4 * s;
+    p.box(w, 3.2 * s, w * 0.9, walls[Math.floor(rand() * walls.length)], { x, y: 1.6 * s, z: hz }, 0.25);
+    p.cone(w * 0.85, 2.4 * s, roofs[Math.floor(rand() * roofs.length)], { x, y: 4.4 * s, z: hz, ry: Math.PI / 4 }, 4);
+    win.box(0.9 * s, 0.9 * s, 0.1, "#fff1cf", { x, y: 1.8 * s, z: hz + w * 0.45 + 0.02 }, 0.05);
+  }
   group.add(p.mesh(mat));
   const bulbMat = new MeshBasicMaterial({ vertexColors: true });
   group.add(bulbs.mesh(bulbMat, false));
+  const winMat = new MeshBasicMaterial({ vertexColors: true });
+  group.add(win.mesh(winMat, false));
 
-  const rand = seeded(31);
   const trees: Spot[] = [];
   const bushes: Spot[] = [];
   const flowers: Spot[] = [];
@@ -52,7 +75,11 @@ export function buildRoad(mat: Material, foliage: Material, models: Models, q: Q
   }
   group.add(scatter(models, TREE_KINDS, trees, foliage, { scale: 4.4, seed: 8 }));
   group.add(scatter(models, BUSH_KINDS, bushes, foliage, { scale: 2.4, seed: 9 }));
+  // Padang rendah di sisi dekat (bunga & batu kecil saja, supaya papan milestone tetap terbaca).
+  for (let i = 0; i < (q.mobile ? 50 : 120); i++) flowers.push({ x: -40 + rand() * 290, z: z + 5 + rand() * 13 });
   group.add(scatter(models, FLOWER_KINDS, flowers, foliage, { scale: 2.2, seed: 10, shadows: false }));
+  const pebbles = Array.from({ length: q.mobile ? 10 : 24 }, () => ({ x: -40 + rand() * 290, z: z + 6 + rand() * 12 }));
+  group.add(scatter(models, ["rock_smallA", "stone_smallB", "grass_large"], pebbles, foliage, { scale: 1.8, seed: 11, shadows: false }));
   const fence: Spot[] = [];
   for (let x = -36; x < 256; x += 2.4) fence.push({ x, z: z - 3.4, ry: 0, s: 1 });
   group.add(scatter(models, ["fence_simple"], fence, mat, { scale: 2.4, seed: 1 }));
@@ -61,14 +88,21 @@ export function buildRoad(mat: Material, foliage: Material, models: Models, q: Q
     const g = buildGrass(
       q.grass,
       (r) => {
-        const x = -30 + r() * 160;
+        const x = -30 + r() * 200;
         return { x, z: z - 3.7 - r() * 6 };
       },
       12,
     );
     group.add(g.mesh);
+    group.add(buildGrass(Math.round(q.grass * 0.6), (r) => ({ x: -30 + r() * 200, z: z + 4 + r() * 12 }), 15).mesh);
   }
-  return { group, glows: [{ mat: bulbMat, base: new Color(1, 1, 1), night: 2 }] as Glow[] };
+  return {
+    group,
+    glows: [
+      { mat: bulbMat, base: new Color(1, 1, 1), night: 2 },
+      { mat: winMat, base: new Color(1, 1, 1), night: 2.4 },
+    ] as Glow[],
+  };
 }
 
 /** Babak Skill: bagian dalam ransel — kain lembut bergaris jahitan + barang-barang kecil yang melayang. */
@@ -147,7 +181,29 @@ export function buildGallery(mat: Material, foliage: Material, models: Models, q
   }
   p.box(1.2, 15.5, 27, "#4a3a32", { x: 24, y: 9, z: -262 }, 0.4).box(0.6, 13, 24, "#1d1a22", { x: 24.7, y: 9, z: -262 }, 0.1);
   p.box(1, 9, 1, "#6b5038", { x: 24, y: 1, z: -250 }, 0.2).box(1, 9, 1, "#6b5038", { x: 24, y: 1, z: -274 }, 0.2);
+  // Untaian lampu warna-warni melengkung antar-gapura.
+  const lights = new Parts();
+  const tones = ["#ffd36b", "#ff9a7a", "#fff1cf", "#a8d8ff"];
+  for (let z = -230; z > -331; z -= 9) {
+    const a = { x: 42 + Math.sin(z * 0.07) * 3, z: z - 2.6 };
+    const b = { x: 42 + Math.sin((z - 9) * 0.07) * 3, z: z - 9 + 2.6 };
+    for (let k = 0; k <= 5; k++) {
+      const u = k / 5;
+      lights.ball(0.16, tones[k % tones.length], { x: a.x + (b.x - a.x) * u, y: 8.6 - Math.sin(Math.PI * u) * 1.1, z: a.z + (b.z - a.z) * u }, 10, 8);
+    }
+  }
+  // Tikar & keranjang piknik di padang bunga.
+  [
+    [32, -244, "#d2453b"],
+    [36, -300, "#5b7bd1"],
+  ].forEach(([x, z, c]) => {
+    const X = x as number;
+    const Z = z as number;
+    p.box(3.2, 0.06, 2.4, c as string, { x: X, y: 0.04, z: Z, ry: 0.3 }, 0.02).cyl(0.4, 0.32, 0.5, "#a47c55", { x: X + 0.8, y: 0.3, z: Z - 0.4 }, 12);
+  });
   group.add(p.mesh(mat));
+  const lightMat = new MeshBasicMaterial({ vertexColors: true });
+  group.add(lights.mesh(lightMat, false));
 
   const rand = seeded(51);
   // Padang di belakang gapura saja (kamera di x = 70; yang terlalu dekat tampak raksasa).
@@ -157,8 +213,13 @@ export function buildGallery(mat: Material, foliage: Material, models: Models, q
   const treeSpots = Array.from({ length: q.mobile ? 14 : 26 }, () => ({ x: 6 + rand() * 30, z: -225 - rand() * 125, s: 1.1 + rand() * 0.6 }));
   group.add(scatter(models, TREE_KINDS, treeSpots, foliage, { scale: 4.6, seed: 54 }));
   group.add(scatter(models, ["log", "stump_round", "mushroom_red", "rock_smallA"], meadow(14), mat, { scale: 2.4, seed: 55 }));
+  // Hutan rapat di belakang layar bioskop & jauh di seberang, supaya cakrawala galeri tidak kosong.
+  const backTrees = Array.from({ length: q.mobile ? 24 : 50 }, () => ({ x: -40 + rand() * 60, z: -215 - rand() * 140, s: 1.2 + rand() * 0.8 }));
+  group.add(scatter(models, TREE_KINDS, backTrees.filter((t) => !(t.x > 18 && Math.abs(t.z + 262) < 16)), foliage, { scale: 4.8, seed: 56, shadows: false }));
+  group.add(scatter(models, BUSH_KINDS, backTrees.slice(0, q.mobile ? 10 : 24).map((t) => ({ x: t.x + 3, z: t.z + 2 })), foliage, { scale: 2.6, seed: 57, shadows: false }));
+  group.add(scatter(models, ["rock_largeA", "rock_smallA", "stone_smallB", "grass_large"], meadow(q.mobile ? 10 : 22), mat, { scale: 2.2, seed: 58, shadows: false }));
   if (q.grass) group.add(buildGrass(q.grass, (r) => ({ x: 26 + r() * 22, z: -228 - r() * 110 }), 14).mesh);
-  return group;
+  return { group, glows: [{ mat: lightMat, base: new Color(1, 1, 1), night: 2 }] as Glow[] };
 }
 
 const WATER_VERT = /* glsl */ `
@@ -236,7 +297,32 @@ export function buildDusk(mat: Material, foliage: Material, models: Models, q: Q
   });
   dusk.add(scatter(models, [...BUSH_KINDS, "rock_largeA", "grass_large"], shore, foliage, { scale: 2.8, seed: 62 }));
   dusk.add(scatter(models, ["lily_large"], Array.from({ length: 12 }, () => ({ x: 80 + rand() * 30, z: -315 - rand() * 40, y: 0.1 })), foliage, { scale: 2, seed: 63, shadows: false }));
-  dusk.add(scatter(models, ["canoe"], [{ x: 104, z: -326, y: 0.05, ry: 0.6 }], mat, { scale: 3, seed: 64 }));
+
+  // Pepohonan mengelilingi danau (kecuali tepi dekat kamera), dermaga kayu & rumah bercahaya di seberang.
+  const ring: Spot[] = [];
+  for (let i = 0; i < (q.mobile ? 26 : 50); i++) {
+    const a = rand() * Math.PI * 2;
+    if (Math.sin(a) > 0.2) continue;
+    ring.push({ x: 95 + Math.cos(a) * (54 + rand() * 22), z: -345 + Math.sin(a) * (42 + rand() * 18), s: 1.1 + rand() * 0.7 });
+  }
+  dusk.add(scatter(models, TREE_KINDS, ring, foliage, { scale: 4.6, seed: 65, shadows: false }));
+  const reeds: Spot[] = Array.from({ length: q.mobile ? 20 : 40 }, () => {
+    const a = rand() * Math.PI * 2;
+    return { x: 95 + Math.cos(a) * (42 + rand() * 4), z: -345 + Math.sin(a) * (32 + rand() * 4) };
+  });
+  dusk.add(scatter(models, ["grass_large", "plant_bush"], reeds, foliage, { scale: 2.4, seed: 66, shadows: false }));
+  const shoreline = new Parts();
+  shoreline.box(2.4, 0.2, 14, "#8a6a4a", { x: 76, y: 0.55, z: -318 }, 0.05);
+  for (let k = 0; k < 4; k++) [-1, 1].forEach((s) => shoreline.cyl(0.13, 0.13, 1.4, "#5b4632", { x: 76 + s * 1.1, y: 0.2, z: -312 - k * 4 }, 8));
+  const lit = new Parts();
+  [62, 78, 96, 114, 130].forEach((x, i) => {
+    const hz = -398 - (i % 2) * 6;
+    shoreline.box(5, 3.4, 4.4, ["#ecdcc0", "#e3cfae"][i % 2], { x, y: 1.7, z: hz }, 0.25).cone(4.2, 2.4, ["#a3191f", "#c2453b"][i % 2], { x, y: 4.6, z: hz, ry: Math.PI / 4 }, 4);
+    [-1, 1].forEach((s) => lit.box(0.9, 0.9, 0.1, "#ffcf8a", { x: x + s * 1.2, y: 1.9, z: hz + 2.23 }, 0.05));
+  });
+  dusk.add(shoreline.mesh(mat, false));
+  const litMat = new MeshBasicMaterial({ vertexColors: true });
+  dusk.add(lit.mesh(litMat, false));
 
   const photos = new Parts();
   for (let i = 0; i < (q.mobile ? 8 : 14); i++) {
@@ -269,6 +355,7 @@ export function buildDusk(mat: Material, foliage: Material, models: Models, q: Q
     dusk,
     night,
     water,
+    glows: [{ mat: litMat, base: new Color(1, 1, 1), night: 2.2 }] as Glow[],
     animate: (t: number) => {
       floating.position.y = Math.sin(t * 0.6) * 0.35;
       low.position.y = Math.sin(t * 0.5) * 0.5;
@@ -277,6 +364,7 @@ export function buildDusk(mat: Material, foliage: Material, models: Models, q: Q
     dispose: () => {
       glow.dispose();
       water.dispose();
+      litMat.dispose();
     },
   };
 }

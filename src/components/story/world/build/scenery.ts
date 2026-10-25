@@ -18,7 +18,7 @@ export function buildScenery(mat: Material, foliage: Material, models: Models, q
   const fields = new Parts();
   const crops = ["#d9c26b", "#a9c46a", "#e3d28a", "#8fb85f", "#c9b45a", "#b7cf7a"];
   for (const side of [-1, 1]) {
-    for (let i = 0; i < (lite ? 7 : 12); i++) {
+    for (let i = 0; i < (lite ? 9 : 16); i++) {
       const w = 12 + rand() * 20;
       const d = 9 + rand() * 16;
       const x = side * (46 + rand() * 70);
@@ -33,7 +33,7 @@ export function buildScenery(mat: Material, foliage: Material, models: Models, q
   const walls = ["#ecdcc0", "#f1e4cc", "#e3cfae", "#f4eadb"];
   const roofs = ["#c2453b", "#a3191f", "#d9783c", "#b2252b"];
   const houses: Spot[] = [];
-  for (let t = 0; houses.length < (lite ? 22 : 40) && t < 600; t++) {
+  for (let t = 0; houses.length < (lite ? 30 : 58) && t < 900; t++) {
     const x = (rand() - 0.5) * 270;
     const z = -26 - rand() * 66;
     // Kosongkan area kampus/pabrik/masjid (sudah ada) dan jalur kamera Perjalanan.
@@ -52,13 +52,13 @@ export function buildScenery(mat: Material, foliage: Material, models: Models, q
   });
   // Menara air & kincir angin kecil sebagai penanda di kejauhan.
   village.cyl(0.35, 0.35, 11, "#a29d95", { x: -78, y: 5.5, z: -58 }, 12).cyl(2.3, 2.3, 3, "#c4beb5", { x: -78, y: 12.4, z: -58 }, 20).dome(2.3, "#b2252b", { x: -78, y: 13.9, z: -58 });
+  // Baling-baling kincir dibuat terpisah di life.ts supaya bisa berputar.
   village.cyl(0.3, 0.55, 12, "#ecdcc0", { x: 84, y: 6, z: -62 }, 12);
-  [0, 1, 2, 3].forEach((k) => village.box(0.45, 8, 0.12, "#f5eee2", { x: 84, y: 12.2, z: -61.4, rz: (k * Math.PI) / 2 + 0.5, sy: 1 }, 0.04));
   group.add(village.mesh(mat));
 
   // Hutan di kiri-kanan (dekat → rapat, jauh → lebat) + semak & bunga di tepi hutan.
   const forest: Spot[] = [];
-  for (let t = 0; forest.length < (lite ? 55 : 120) && t < 1500; t++) {
+  for (let t = 0; forest.length < (lite ? 75 : 170) && t < 2200; t++) {
     const side = rand() > 0.5 ? 1 : -1;
     const x = side * (36 + rand() * 120);
     const z = -12 - rand() * 90;

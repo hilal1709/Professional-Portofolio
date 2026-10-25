@@ -39,10 +39,10 @@ export function buildCity(mat: Material, foliage: Material, models: Models, q: Q
   p.box(3.2, 14, 3.2, "#a29d95", { x: -14, y: 7, z: -52 });
   [3, 6, 9, 12].forEach((y) => p.box(4, 0.35, 4, "#8e8981", { x: -14, y, z: -52 }, 0.12));
   p.box(1.4, 2, 1.4, "#a29d95", { x: -14, y: 15, z: -52 });
-  p.cyl(0.9, 0.9, 11, "#aaa49b", { x: -8.5, y: 2.2, z: -50, rz: Math.PI / 2 - 0.12 });
-  p.cyl(0.55, 0.75, 16, "#9b968f", { x: -5, y: 8, z: -56 });
-  p.cyl(0.58, 0.58, 0.8, "#a3191f", { x: -5, y: 15.6, z: -56 });
-  p.cyl(0.6, 0.6, 0.5, "#f5eee2", { x: -5, y: 13.8, z: -56 });
+  p.cyl(0.9, 0.9, 11, "#aaa49b", { x: -16, y: 2.2, z: -45, rz: Math.PI / 2 - 0.12 });
+  p.cyl(0.55, 0.75, 16, "#9b968f", { x: -10, y: 8, z: -56 });
+  p.cyl(0.58, 0.58, 0.8, "#a3191f", { x: -10, y: 15.6, z: -56 });
+  p.cyl(0.6, 0.6, 0.5, "#f5eee2", { x: -10, y: 13.8, z: -56 });
 
   // Gedung kampus UISI.
   p.box(campus.w, campus.h, campus.d, "#e2cfae", { x: campus.x, y: campus.h / 2, z: campus.z }, 0.6);
@@ -81,6 +81,21 @@ export function buildCity(mat: Material, foliage: Material, models: Models, q: Q
   // Jalan depan kota.
   p.box(140, 0.08, 5, "#d8c7a2", { x: 0, y: 0.03, z: -24 }, 0.02);
   for (let x = -66; x < 70; x += 6) p.box(2.6, 0.1, 0.3, "#fbf3e4", { x, y: 0.06, z: -24 }, 0.04);
+  // Tiang listrik + kabel melengkung di sisi dekat jalan, ala jalan kampung.
+  const poleX = [-60, -46, -32, -18, 18, 32, 46, 60];
+  poleX.forEach((x) => p.cyl(0.14, 0.18, 7, "#8e8981", { x, y: 3.5, z: -20.2 }, 10).box(1.8, 0.14, 0.14, "#8e8981", { x, y: 6.6, z: -20.2 }, 0.04));
+  for (let i = 0; i < poleX.length - 1; i++) {
+    const [a, b] = [poleX[i], poleX[i + 1]];
+    if (b - a > 20) continue;
+    [-0.7, 0.7].forEach((dz) => wire(p, a, b, 6.65, -20.2 + dz, 0.9));
+  }
+  // Gerobak kaki lima beratap payung & bangku taman di tepi jalan.
+  [
+    [-28, -19.4, "#d2453b"],
+    [38, -19.6, "#f2c14e"],
+    [-52, -28, "#5b7bd1"],
+  ].forEach(([x, z, c]) => cart(p, x as number, z as number, c as string));
+  [-40, -10, 26, 54].forEach((x) => p.box(2.2, 0.14, 0.6, "#a47c55", { x, y: 0.55, z: -19.6 }, 0.05).box(0.12, 0.5, 0.5, "#5b4632", { x: x - 0.9, y: 0.25, z: -19.6 }, 0.03).box(0.12, 0.5, 0.5, "#5b4632", { x: x + 0.9, y: 0.25, z: -19.6 }, 0.03).box(2.2, 0.5, 0.1, "#a47c55", { x, y: 0.95, z: -19.9 }, 0.04));
   group.add(p.mesh(mat));
 
   // Jendela: material dasar yang makin terang saat senja/malam (kena bloom).
@@ -129,7 +144,7 @@ export function buildCity(mat: Material, foliage: Material, models: Models, q: Q
     for (let i = 0; i < puffs; i++) {
       const k = (t * 0.12 + i / puffs) % 1;
       const s = 0.9 + k * 2.4;
-      smoke.setMatrixAt(i, matrixOf({ x: -5 + k * 5 + Math.sin(i) * 0.4, y: 16.5 + k * 9, z: -56 - k * 2, sx: s, sy: s * 0.85, sz: s }, m));
+      smoke.setMatrixAt(i, matrixOf({ x: -10 + k * 5 + Math.sin(i) * 0.4, y: 16.5 + k * 9, z: -56 - k * 2, sx: s, sy: s * 0.85, sz: s }, m));
     }
     smoke.instanceMatrix.needsUpdate = true;
   };
@@ -137,11 +152,31 @@ export function buildCity(mat: Material, foliage: Material, models: Models, q: Q
   return { group, animate, glows };
 }
 
+/** Kabel listrik melengkung dari x = a ke x = b (beberapa segmen lurus). */
+export function wire(p: Parts, a: number, b: number, y: number, z: number, sag: number, segs = 6) {
+  const at = (k: number) => ({ x: a + (b - a) * k, y: y - Math.sin(Math.PI * k) * sag });
+  for (let i = 0; i < segs; i++) {
+    const u = at(i / segs);
+    const w = at((i + 1) / segs);
+    const len = Math.hypot(w.x - u.x, w.y - u.y);
+    p.box(len + 0.02, 0.04, 0.04, "#3a3330", { x: (u.x + w.x) / 2, y: (u.y + w.y) / 2, z, rz: Math.atan2(w.y - u.y, w.x - u.x) }, 0.01);
+  }
+}
+
+/** Gerobak kaki lima dengan payung warna-warni. */
+export function cart(p: Parts, x: number, z: number, umbrella: string) {
+  p.box(2.4, 1.1, 1.2, "#e8dcc6", { x, y: 1.05, z }, 0.12).box(2.5, 0.12, 1.3, "#a47c55", { x, y: 1.65, z }, 0.04);
+  [-0.8, 0.8].forEach((dx) => p.cyl(0.38, 0.38, 0.12, "#3a3330", { x: x + dx, y: 0.4, z: z + 0.66, rx: Math.PI / 2 }, 12));
+  p.cyl(0.05, 0.05, 2.4, "#5b4632", { x, y: 2.8, z }, 6).cone(1.9, 0.8, umbrella, { x, y: 4.2, z }, 12);
+}
+
 /** Ruang di dalam gedung kampus (babak Tentang): dinding bergradasi lembut, rak, jendela, lampu hangat. */
 export function buildRoom(mat: Material, foliage: Material, models: Models) {
   const { campus } = POINTS;
-  const box = new BoxGeometry(campus.w - 0.6, campus.h - 0.2, campus.d - 0.6, 8, 6, 8).toNonIndexed();
-  box.translate(campus.x, campus.h / 2, campus.z);
+  // Sedikit lebih rendah dari gedung luar supaya atap merahnya tidak z-fighting dengan langit-langit.
+  const roomH = campus.h - 0.7;
+  const box = new BoxGeometry(campus.w - 0.6, roomH, campus.d - 0.6, 8, 6, 8).toNonIndexed();
+  box.translate(campus.x, roomH / 2, campus.z);
   const pos = box.attributes.position;
   const normal = box.attributes.normal;
   const colors = new Float32Array(normal.count * 3);

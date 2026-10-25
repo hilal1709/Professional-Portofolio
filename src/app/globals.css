@@ -242,9 +242,6 @@ html:not(.world-on):not(.world-off) :is(.story-stage .cam, .sky > *, .journey-gr
 html:not(.world-on):not(.world-off) .about-room { background: none; }
 .world-on .skills-bg { opacity: var(--bag, 1); }
 
-/* Preloader sudah pernah tampil di sesi ini (diset skrip inline sebelum hidrasi). */
-.preloader-skip .preloader { display: none; }
-
 /* prefers-reduced-motion: tanpa pin/scroll halus — babak disusun bertumpuk biasa. */
 .stage-static { height: auto !important; overflow: visible !important; }
 .stage-static .cam3d { position: static; }

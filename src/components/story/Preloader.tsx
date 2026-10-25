@@ -5,7 +5,6 @@ import { ScrollSmoother } from "gsap/ScrollSmoother";
 import { useEffect, useRef, useState } from "react";
 import { Mascot } from "@/components/mascot/Mascot";
 import { Progress } from "@/components/ui/progress";
-import { PRELOADER_SEEN_KEY } from "./preloaderSkip";
 import { PRELOADER_DONE, WORLD_READY, worldFlags } from "./world/rig";
 
 /** Batas tunggu: HP lambat tetap masuk; dunia 3D menyusul dengan fade-in. */
@@ -26,7 +25,7 @@ function finish() {
 
 /**
  * Layar pembuka: siluet kota "digambar" garis demi garis (anime.js), maskot melambai,
- * dan progres nyata (font, gambar, dunia 3D) lewat Progress shadcn. Tampil sekali per sesi.
+ * dan progres nyata (font, gambar, dunia 3D) lewat Progress shadcn. Tampil setiap kali halaman dibuka.
  */
 export function Preloader() {
   const root = useRef<HTMLDivElement>(null);
@@ -36,18 +35,6 @@ export function Preloader() {
   useEffect(() => {
     const el = root.current!;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let seen = false;
-    try {
-      seen = Boolean(sessionStorage.getItem(PRELOADER_SEEN_KEY));
-    } catch {}
-    if (seen) {
-      // Sembunyikan lewat CSS (.preloader-skip) lalu lepas dari DOM supaya maskotnya tidak terus beranimasi.
-      document.documentElement.classList.add("preloader-skip");
-      queueMicrotask(() => setGone(true));
-      finish();
-      return;
-    }
-
     // Jangan biarkan cerita ter-scroll di balik tirai.
     const pause = window.setInterval(() => ScrollSmoother.get()?.paused(true), 50);
 
@@ -91,9 +78,6 @@ export function Preloader() {
       closed = true;
       window.clearInterval(pause);
       window.clearTimeout(timeout);
-      try {
-        sessionStorage.setItem(PRELOADER_SEEN_KEY, "1");
-      } catch {}
       if (reduced) {
         anims.push(animate(el, { opacity: 0, duration: 200, onComplete: () => setGone(true) }));
         finish();

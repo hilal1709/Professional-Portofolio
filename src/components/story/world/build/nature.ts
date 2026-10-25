@@ -38,6 +38,24 @@ export function buildBase(mat: Material) {
     hills.ball(1, tones[i % tones.length], { x: 50 + Math.cos(a) * r, y: -s * 0.12, z: -180 + Math.sin(a) * r, sx: s * 1.7, sy: s * (0.32 + rand() * 0.28), sz: s }, 24, 12);
   }
   group.add(hills.mesh(mat, false));
+
+  // Pegunungan jauh di balik cincin bukit: dua lapis kerucut lembut kebiruan (ditelan kabut → kesan jauh).
+  const peaks = new Parts();
+  const blues = [
+    ["#a7bfc9", "#b4c9cf"],
+    ["#93adbb", "#9fb6c2"],
+  ];
+  [0, 1].forEach((layer) => {
+    const n = layer ? 22 : 30;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + rand() * 0.15;
+      const r = (layer ? 470 : 400) + rand() * 40;
+      const w = 50 + rand() * 50;
+      const h = (layer ? 80 : 50) + rand() * 45;
+      peaks.cone(1, 1, blues[layer][i % 2], { x: 50 + Math.cos(a) * r, y: h / 2 - 4, z: -180 + Math.sin(a) * r, sx: w, sy: h, sz: w * 0.8, ry: rand() }, 9);
+    }
+  });
+  group.add(peaks.mesh(mat, false));
   return group;
 }
 

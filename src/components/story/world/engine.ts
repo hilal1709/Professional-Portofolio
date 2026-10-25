@@ -16,6 +16,7 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import type { SceneKey } from "../stage/sceneStore";
 import { loadModels } from "./assets";
 import { buildCity, buildRoom, type Glow } from "./build/city";
+import { buildLife } from "./build/life";
 import { buildBase, buildClouds } from "./build/nature";
 import { buildSky } from "./build/sky";
 import { buildDusk, buildGallery, buildPack, buildRoad } from "./build/zones";
@@ -86,9 +87,15 @@ export async function createWorld(canvas: HTMLCanvasElement, initial: Quality) {
   const pack = buildPack(mat, q);
   const gallery = buildGallery(mat, foliage, models, q);
   const dusk = buildDusk(mat, foliage, models, q);
-  const zones: Record<Zone, Object3D> = { city: city.group, room: room.group, road: road.group, pack: pack.group, gallery, dusk: dusk.dusk, night: dusk.night };
+  const zones: Record<Zone, Object3D> = { city: city.group, room: room.group, road: road.group, pack: pack.group, gallery: gallery.group, dusk: dusk.dusk, night: dusk.night };
   Object.values(zones).forEach((z) => scene.add(z));
-  const glows: Glow[] = [...city.glows, ...room.glows, ...road.glows];
+  // Kendaraan, burung, kunang-kunang, dll. menumpang di grup zonanya supaya ikut tampil/tersembunyi.
+  const life = buildLife(mat, models, q);
+  city.group.add(life.city);
+  road.group.add(life.road);
+  gallery.group.add(life.gallery);
+  dusk.dusk.add(life.dusk);
+  const glows: Glow[] = [...city.glows, ...room.glows, ...road.glows, ...gallery.glows, ...dusk.glows, ...life.glows];
 
   let post: Post | null = q.post ? createPost(renderer, scene, camera, q.msaa) : null;
   let size = { w: 1, h: 1 };
@@ -175,6 +182,7 @@ export async function createWorld(canvas: HTMLCanvasElement, initial: Quality) {
       if (city.group.visible) city.animate(time);
       if (pack.group.visible) pack.animate(time);
       if (dusk.dusk.visible || dusk.night.visible) dusk.animate(time);
+      life.animate(time);
 
       if (post) post.render();
       else renderer.render(scene, camera);
@@ -195,6 +203,7 @@ export async function createWorld(canvas: HTMLCanvasElement, initial: Quality) {
       room.dispose();
       pack.dispose();
       dusk.dispose();
+      life.dispose();
       renderer.dispose();
       renderer.forceContextLoss();
     },
