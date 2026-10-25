@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Plus_Jakarta_Sans } from "next/font/google";
+import Script from "next/script";
 import { FeedbackProvider } from "@/components/feedback/FeedbackProvider";
+import { PRELOADER_SKIP_SCRIPT } from "@/components/story/preloaderSkip";
 import "./globals.css";
 
 const display = Bricolage_Grotesque({
@@ -26,8 +28,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="id" className={`${display.variable} ${body.variable} antialiased`}>
+    <html lang="id" className={`${display.variable} ${body.variable} antialiased`} suppressHydrationWarning>
       <body className="min-h-dvh">
+        <Script id="preloader-skip" strategy="beforeInteractive">
+          {PRELOADER_SKIP_SCRIPT}
+        </Script>
         <FeedbackProvider>{children}</FeedbackProvider>
       </body>
     </html>

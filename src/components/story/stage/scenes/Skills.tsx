@@ -17,7 +17,9 @@ export function groupSkills(skills: Skill[]) {
 export function SkillsScene({ chapter, skills }: { chapter?: Chapter; skills: Skill[] }) {
   const groups = groupSkills(skills);
   return (
-    <div className="skills-bag flex h-full w-full items-center justify-center bg-[radial-gradient(90%_80%_at_50%_45%,#5a3d2b_0%,#3a281d_70%,#2a1c14_100%)] px-4 pb-20 pt-24 text-paper sm:px-8 sm:pt-28">
+    <div className="skills-bag relative flex h-full w-full items-center justify-center px-4 pb-20 pt-24 text-paper sm:px-8 sm:pt-28">
+      {/* Kain ransel: buram saat portal terbuka, lalu menipis agar bagian dalam ransel 3D terlihat. */}
+      <div className="skills-bg absolute inset-0 bg-[radial-gradient(90%_80%_at_50%_45%,#5a3d2b_0%,#3a281d_70%,#2a1c14_100%)]" aria-hidden />
       <div className="pointer-events-none absolute inset-3 rounded-[28px] border-2 border-dashed border-[#c9a77a]/35 sm:inset-6" aria-hidden />
       <div className="relative grid w-full max-w-6xl items-center gap-6 lg:grid-cols-[19rem_1fr] lg:gap-12">
         <div className="skills-head">
@@ -58,7 +60,7 @@ export function SkillsScene({ chapter, skills }: { chapter?: Chapter; skills: Sk
   );
 }
 
-/** Skill: portal terbuka dari ransel; tiap kategori tampil bergantian seperti kantong yang dibuka. */
+/** Skill: portal terbuka dari ransel, kamera pindah ke dalam ransel 3D; tiap kategori tampil bergantian seperti kantong yang dibuka. */
 export const buildSkills: SceneBuild = (tl, s, ctx) => {
   const p = ctx.shared.packPoint ?? { x: ctx.vw / 2, y: ctx.vh / 2 };
   const at = `${p.x}px ${p.y}px`;
@@ -68,9 +70,15 @@ export const buildSkills: SceneBuild = (tl, s, ctx) => {
 
   tl.fromTo(ctx.el, { clipPath: `circle(0% at ${at})` }, { clipPath: `circle(150% at ${at})`, duration: 1.1, ease: "power2.inOut" }, s)
     .from(ctx.el.querySelector(".skills-head"), { y: 40, opacity: 0, duration: 0.7, ease: "power2.out" }, s + 0.5);
+  // Saat portal menutupi layar penuh, kamera dipindah ke dalam ransel, lalu kainnya menipis.
+  ctx.fly(s + 1, "skills", 0.05, { ease: "none" });
+  ctx.drift(s + 1, { dx: 0 }, 0.05);
+  tl.fromTo(ctx.el.querySelector(".skills-bg"), { "--bag": 1 }, { "--bag": 0.45, duration: 0.7, ease: "power1.out" }, s + 1.1);
 
   pockets.forEach((pocket, i) => {
     const t = s + 1 + i * STEP;
+    // Barang di dalam ransel ikut bergeser sedikit tiap kantong berganti.
+    if (i > 0) ctx.drift(t - 0.2, { dx: (i % 2 ? 1 : -1) * 1.2 }, 0.6, "power2.inOut");
     if (i > 0) tl.fromTo(pocket, { yPercent: 35, rotate: 4, opacity: 0 }, { yPercent: 0, rotate: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, t);
     else tl.fromTo(pocket, { scale: 0.85, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(1.5)" }, s + 0.6);
     tl.fromTo(pocket.querySelectorAll(".skill-bar"), { scaleX: 0 }, { scaleX: 1, duration: 0.5, stagger: 0.05, ease: "power2.out" }, t + 0.1);
@@ -78,8 +86,8 @@ export const buildSkills: SceneBuild = (tl, s, ctx) => {
     if (i < pockets.length - 1) tl.to(pocket, { yPercent: -30, rotate: -4, opacity: 0, duration: 0.35, ease: "power2.in" }, t + STEP - 0.35);
   });
 
-  // Keluar: terdorong ke kiri & meredup saat babak Proyek meluncur menimpa.
+  // Keluar: isi memudar saat kamera mundur keluar dari ransel menuju galeri sore.
   const out = s + 1 + pockets.length * STEP;
-  tl.to(ctx.el, { xPercent: -30, filter: "brightness(0.55)", duration: 1, ease: "power2.inOut" }, out);
+  tl.to(ctx.el, { opacity: 0, scale: 0.92, duration: 0.6, ease: "power2.in" }, out);
   return 1 + pockets.length * STEP + 1;
 };

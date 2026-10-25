@@ -1,3 +1,4 @@
+import { Preloader } from "@/components/story/Preloader";
 import { SkyBackdrop } from "@/components/story/SkyBackdrop";
 import { StoryChrome } from "@/components/story/StoryChrome";
 import { StoryStage } from "@/components/story/stage/StoryStage";
@@ -11,6 +12,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <Preloader />
       <SkyBackdrop />
       <StoryChrome
         name={data.profile?.nickname ?? "Hilal"}

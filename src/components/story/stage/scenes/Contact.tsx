@@ -108,9 +108,10 @@ export function ContactScene({ chapter, profile }: { chapter?: Chapter; profile:
   );
 }
 
-/** Kontak: kamera mendongak ke langit malam; form muncul, footer jadi frame penutup. */
+/** Kontak: kamera naik & mendongak ke langit malam berbintang; form muncul, footer jadi frame penutup. */
 export const buildContact: SceneBuild = (tl, s, ctx) => {
-  tl.fromTo(ctx.el, { yPercent: -45, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 1.2, ease: "power2.out" }, s)
+  ctx.fly(s, "contact", 1.4);
+  tl.fromTo(ctx.el, { opacity: 0 }, { opacity: 1, duration: 0.8, ease: "power1.out" }, s + 0.4)
     .from(ctx.el.querySelector(".contact-head"), { y: 50, opacity: 0, duration: 0.7 }, s + 0.7)
     .from(ctx.el.querySelector(".contact-form"), { y: 60, scale: 0.96, opacity: 0, duration: 0.8, ease: "power2.out" }, s + 1)
     .from(ctx.el.querySelector(".contact-foot"), { y: 30, opacity: 0, duration: 0.6 }, s + 1.8);

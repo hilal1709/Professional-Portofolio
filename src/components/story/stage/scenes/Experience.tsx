@@ -101,7 +101,7 @@ export function ExperienceScene({ chapter, experiences, gallery }: { chapter?: C
   );
 }
 
-/** Pengalaman: senja; item timeline maju satu per satu, kartu galeri mengipas. */
+/** Pengalaman: kamera berbelok ke danau senja; item timeline maju satu per satu, kartu galeri mengipas. */
 export const buildExperience: SceneBuild = (tl, s, ctx) => {
   const items = Array.from(ctx.el.querySelectorAll<HTMLElement>(".xp-item"));
   const STEP = 0.9;
@@ -109,7 +109,10 @@ export const buildExperience: SceneBuild = (tl, s, ctx) => {
   const desktop = !ctx.mobile && ctx.vw >= 1024 && ctx.vh >= 760;
   ctx.el.querySelector(".xp-list")?.classList.toggle("xp-stack", !desktop);
 
-  tl.from(ctx.el.querySelector(".xp-head"), { y: 60, opacity: 0, duration: 0.8, ease: "power2.out" }, s)
+  ctx.fly(s, "experience", 1.3, { via: { py: 13 } });
+  ctx.drift(s, { dz: 0 }, 1.3, "power2.inOut");
+  tl.fromTo(ctx.el, { opacity: 0 }, { opacity: 1, duration: 0.5 }, s + 0.3)
+    .from(ctx.el.querySelector(".xp-head"), { y: 60, opacity: 0, duration: 0.8, ease: "power2.out" }, s)
     .from(ctx.el.querySelector(".xp-gallery"), { scale: 0.6, rotate: -8, opacity: 0, duration: 1, ease: "back.out(1.4)" }, s + 0.3);
 
   items.forEach((item, i) => {
@@ -123,8 +126,8 @@ export const buildExperience: SceneBuild = (tl, s, ctx) => {
   });
   if (desktop) tl.fromTo(ctx.el.querySelector(".xp-line"), { scaleY: 0 }, { scaleY: 1, duration: items.length * STEP, ease: "none" }, s + 0.8);
 
-  // Keluar: kamera mendongak ke langit malam → isi turun keluar layar.
+  // Keluar: kamera mendongak ke langit malam → isi memudar (lanskap 2D cadangan turun).
   const out = s + 0.8 + items.length * STEP + 0.4;
-  tl.to(ctx.el, { yPercent: 55, opacity: 0, duration: 1, ease: "power2.in" }, out).to(".cam-far", { yPercent: 120, duration: 1, ease: "power2.in" }, out);
+  tl.to(ctx.el, { opacity: 0, duration: 0.6, ease: "power1.in" }, out).to(".cam-far", { yPercent: 120, duration: 1, ease: "power2.in" }, out);
   return out - s + 1;
 };

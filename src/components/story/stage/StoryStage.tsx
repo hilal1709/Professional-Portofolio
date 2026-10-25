@@ -9,6 +9,10 @@ import type { HomeData } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { CityLayer, FarHills, NearGround } from "../Landscape";
 import type { SkyTime } from "../SkyBackdrop";
+import { createCss3d } from "../world/css3d";
+import { rig, type Pose } from "../world/rig";
+import { restPose, STATIONS } from "../world/stations";
+import { World3D } from "../world/World3D";
 import { addPassThrough, ForegroundFrame } from "./ForegroundFrame";
 import { ANCHORS, sceneStore, STORY_GOTO, type SceneKey, type SceneMeta } from "./sceneStore";
 import { AboutScene, buildAbout } from "./scenes/About";
@@ -56,6 +60,7 @@ function useReducedMotion() {
  */
 export function StoryStage({ data }: { data: HomeData }) {
   const stageRef = useRef<HTMLElement>(null);
+  const camRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
   const [layoutKey, setLayoutKey] = useState(0);
   const nav = useRef<{ starts: number[]; st?: ScrollTrigger; duration: number }>({ starts: [], duration: 1 });
@@ -134,7 +139,8 @@ export function StoryStage({ data }: { data: HomeData }) {
   useGSAP(
     () => {
       const stage = stageRef.current!;
-      const els = Array.from(stage.querySelectorAll<HTMLElement>(":scope > .scene"));
+      const els = Array.from(stage.querySelectorAll<HTMLElement>(".scene"));
+      const bodies = els.map((el) => el.querySelector<HTMLElement>(":scope > .scene-body")!);
 
       if (reduced) {
         els.forEach((el, i) => ScrollTrigger.create({ trigger: el, start: "top 55%", end: "bottom 55%", onToggle: (self) => self.isActive && sceneStore.setActive(i) }));
@@ -151,6 +157,28 @@ export function StoryStage({ data }: { data: HomeData }) {
       const shared: SharedBag = {};
       const starts: number[] = [];
 
+      // Panel babak ditempel di bidang 3D masing-masing; matriks kamera disinkronkan tiap frame GSAP.
+      // Layout diukur dulu dalam mode datar (tanpa transform 3D), lalu kamera mulai di pose babak pertama.
+      const css = createCss3d(stage, camRef.current!, els.map((el, i) => ({ el, station: STATIONS[scenes[i].key] })));
+      css.setSize(vw, vh);
+      const S = css.scale;
+      let pose: Pose = restPose(scenes[0].key);
+      gsap.set(rig, { ...pose, dx: 0, dz: 0 });
+      const fly = (at: number, to: (typeof scenes)[number]["key"] | Pose, dur: number, opts?: { ease?: string; via?: Partial<Pose> }) => {
+        const target = typeof to === "string" ? restPose(to) : to;
+        if (opts?.via) {
+          const mid = { ...target } as Pose;
+          (Object.keys(mid) as (keyof Pose)[]).forEach((k) => (mid[k] = opts.via?.[k] ?? (pose[k] + target[k]) / 2));
+          tl.to(rig, { keyframes: [{ ...mid, duration: dur / 2, ease: "power1.in" }, { ...target, duration: dur / 2, ease: "power1.out" }] }, at);
+        } else {
+          tl.to(rig, { ...target, duration: dur, ease: opts?.ease ?? "power2.inOut" }, at);
+        }
+        pose = target;
+      };
+      const drift = (at: number, to: { dx?: number; dy?: number; dz?: number }, dur: number, ease = "none") => {
+        tl.to(rig, { ...to, duration: dur, ease }, at);
+      };
+
       // Panggung hanya mengatur visibility; opacity sepenuhnya milik animasi tiap adegan
       // (mencampur autoAlpha dengan tween opacity membuat adegan hilang saat scroll mundur).
       gsap.set(els, { visibility: "hidden" });
@@ -162,14 +190,17 @@ export function StoryStage({ data }: { data: HomeData }) {
         tl.addLabel(scenes[i].key, start);
         starts.push(start);
         const length = scenes[i].build(tl, start, {
-          el,
+          el: bodies[i],
           stage,
-          prev: els[i - 1] ?? null,
+          prev: bodies[i - 1] ?? null,
           mobile,
           vw,
           vh,
           shared,
           passThrough: (at, dur) => addPassThrough(tl, at, dur),
+          S,
+          fly,
+          drift,
         });
         if (i < els.length - 1) {
           tl.set(el, { visibility: "hidden" }, start + length);
@@ -179,6 +210,9 @@ export function StoryStage({ data }: { data: HomeData }) {
         }
       });
       tl.to({}, { duration: 0.6 }, start); // jeda penutup sebelum cerita selesai
+      css.setFlat(false);
+      const syncCss = () => css.update(rig);
+      gsap.ticker.add(syncCss, false, false);
 
       const duration = tl.duration();
       const st = ScrollTrigger.create({
@@ -199,11 +233,16 @@ export function StoryStage({ data }: { data: HomeData }) {
       });
       nav.current = { starts, st, duration };
       // Hanya untuk debugging lokal (mis. memutar ticker GSAP secara manual di tab tersembunyi).
-      if (process.env.NODE_ENV === "development") Object.assign(window, { __story: { gsap, ScrollTrigger, tl, st, starts, keys: scenes.map((s) => s.key) } });
+      if (process.env.NODE_ENV === "development") Object.assign(window, { __story: { gsap, ScrollTrigger, ScrollSmoother, rig, tl, st, starts, keys: scenes.map((s) => s.key) } });
 
       // Mendarat di babak dari hash URL (mis. kembali dari halaman proyek ke /#proyek).
       const key = ANCHORS[window.location.hash.slice(1)];
       if (key) requestAnimationFrame(() => window.dispatchEvent(new CustomEvent(STORY_GOTO, { detail: key, bubbles: false })));
+
+      return () => {
+        gsap.ticker.remove(syncCss);
+        css.setFlat(true);
+      };
     },
     { dependencies: [reduced, layoutKey, scenes], scope: stageRef, revertOnUpdate: true },
   );
@@ -247,6 +286,7 @@ export function StoryStage({ data }: { data: HomeData }) {
       <div id="smooth-wrapper">
         <div id="smooth-content">
           <section ref={stageRef} aria-label="Cerita M. Hilal" className={cn("story-stage relative h-dvh w-full overflow-hidden", reduced && "stage-static")}>
+            {/* Lanskap 2D: cadangan bila dunia WebGL tidak tersedia (disembunyikan lewat .world-on). */}
             <div className="cam pointer-events-none absolute inset-x-0 top-0 h-dvh" aria-hidden>
               <div className="cam-far absolute inset-x-0 bottom-[22vh] h-[34vh]">
                 <FarHills className="cam-intro h-full w-full" />
@@ -258,15 +298,22 @@ export function StoryStage({ data }: { data: HomeData }) {
                 <NearGround className="cam-intro h-full w-full" />
               </div>
             </div>
-            {scenes.map((s, i) => (
-              <div key={s.key} id={s.anchor} data-scene={s.key} className="scene absolute inset-0" style={{ zIndex: i + 1 }}>
-                {s.node}
-              </div>
-            ))}
+            <div ref={camRef} className="cam3d absolute inset-0">
+              {scenes.map((s, i) => (
+                <div key={s.key} id={s.anchor} data-scene={s.key} className="scene absolute inset-0" style={{ zIndex: i + 1 }}>
+                  <div className="scene-body h-full w-full">{s.node}</div>
+                </div>
+              ))}
+            </div>
           </section>
         </div>
       </div>
-      {reduced ? null : <ForegroundFrame />}
+      {reduced ? null : (
+        <>
+          <World3D />
+          <ForegroundFrame />
+        </>
+      )}
     </>
   );
 }

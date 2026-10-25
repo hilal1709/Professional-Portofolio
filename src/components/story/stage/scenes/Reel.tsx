@@ -64,7 +64,7 @@ export function ReelScene({ data }: { data: HomeData }) {
   );
 }
 
-/** Reel: kartu proyek terakhir membesar menjadi bingkai video. */
+/** Reel: kartu proyek terakhir membesar menjadi bingkai video, di depan layar bioskop terbuka saat senja. */
 export const buildReel: SceneBuild = (tl, s, ctx) => {
   const frame = ctx.el.querySelector<HTMLElement>(".reel-frame")!;
   const stageRect = ctx.stage.getBoundingClientRect();

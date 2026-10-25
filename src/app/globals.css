@@ -217,11 +217,28 @@ dialog.modal-panel[open]::backdrop { animation: backdrop-in 300ms ease-out both;
 /* ---------- Panggung cerita ---------- */
 /* Bingkai depan ikut gelap saat malam (variabel --stars diatur SkyBackdrop). */
 .fg-tone { filter: brightness(calc(1 - var(--stars, 0) * 0.65)) saturate(calc(1 - var(--stars, 0) * 0.4)); }
-.story-stage .scene { will-change: transform, opacity; }
+.story-stage .scene-body { will-change: transform, opacity; }
+
+/* Kamera CSS3D: panel babak berada di ruang 3D yang sama dengan dunia WebGL. */
+.cam3d.cam3d-on { transform-style: preserve-3d; }
+.cam3d-on > .scene { backface-visibility: hidden; }
+
+/* Dunia WebGL aktif: langit & lanskap 2D cadangan disembunyikan, latar babak jadi tembus pandang. */
+.world-canvas { opacity: 0; transition: opacity 0.9s ease-out; }
+.world-on .world-canvas { opacity: 1; }
+.world-on .story-stage .cam { visibility: hidden; }
+/* Selubung krem tipis: ruang 3D tetap terlihat, teks tetap terbaca. */
+.world-on .about-room { background: radial-gradient(120% 90% at 50% 10%, rgb(251 243 228 / 0.82) 0%, rgb(234 223 203 / 0.7) 70%, rgb(220 203 176 / 0.45) 100%); }
+.world-on .journey-ground { display: none; }
+.world-on .skills-bg { opacity: var(--bag, 1); }
+
+/* Preloader sudah pernah tampil di sesi ini (diset skrip inline sebelum hidrasi). */
+.preloader-skip .preloader { display: none; }
 
 /* prefers-reduced-motion: tanpa pin/scroll halus — babak disusun bertumpuk biasa. */
 .stage-static { height: auto !important; overflow: visible !important; }
-.stage-static > .scene { position: relative; inset: auto; min-height: 100dvh; overflow-x: auto; }
+.stage-static .cam3d { position: static; }
+.stage-static .scene { position: relative; inset: auto; min-height: 100dvh; overflow-x: auto; }
 /* Babak Pengalaman di layar pendek: item timeline bergantian di tempat yang sama. */
 .xp-stack { display: grid !important; }
 .xp-stack > span { display: none !important; }

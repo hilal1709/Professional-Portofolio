@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Mascot, SpeechBubble } from "@/components/mascot/Mascot";
 import { ProjectCover } from "@/components/ProjectCover";
 import { CardBody, CardContainer, CardItem } from "@/components/ui/3d-card";
+import { Badge } from "@/components/ui/badge";
 import type { Chapter, Project } from "@/lib/db/schema";
 import type { SceneBuild } from "../types";
 
@@ -27,9 +28,9 @@ function ProjectCard({ project }: { project: Project }) {
         </CardItem>
         <CardItem translateZ={20} className="mt-3 flex w-full flex-wrap gap-2 px-1">
           {project.tech.map((t) => (
-            <span key={t} className="rounded-full bg-paper-deep px-3 py-1 text-xs font-semibold text-ink">
+            <Badge key={t} variant="secondary" className="h-6 bg-paper-deep px-3 font-semibold text-ink">
               {t}
-            </span>
+            </Badge>
           ))}
         </CardItem>
         <CardItem translateZ={50} className="mt-4 px-1 pb-1">
@@ -49,8 +50,6 @@ function ProjectCard({ project }: { project: Project }) {
 export function ProjectsScene({ chapter, projects }: { chapter?: Chapter; projects: Project[] }) {
   return (
     <div className="relative h-full w-full overflow-hidden">
-      {/* Langit sore milik adegan ini, supaya menutup babak sebelumnya saat meluncur masuk. */}
-      <div className="projects-sky absolute inset-0 bg-[linear-gradient(180deg,#88bfe3_0%,#fbe0ae_100%)]" aria-hidden />
       <div className="projects-track relative flex h-full w-max items-center pt-16">
         <div className="flex h-full w-screen shrink-0 flex-col justify-center px-6 md:w-[46vw] md:pl-[8vw] md:pr-[4vw]">
           <h2 className="font-display text-[clamp(2.4rem,5.4vw,5rem)] font-extrabold leading-[0.92] text-ink">{chapter?.title ?? "Hal-hal yang sudah kubangun"}</h2>
@@ -71,7 +70,7 @@ export function ProjectsScene({ chapter, projects }: { chapter?: Chapter; projec
   );
 }
 
-/** Proyek: meluncur menimpa babak Skill, lalu kartu bergeser horizontal (desktop & HP). */
+/** Proyek: kamera keluar dari ransel ke galeri sore, lalu kartu bergeser horizontal sementara galeri 3D ber-parallax. */
 export const buildProjects: SceneBuild = (tl, s, ctx) => {
   const track = ctx.el.querySelector<HTMLElement>(".projects-track")!;
   const distance = Math.max(0, track.scrollWidth - ctx.vw);
@@ -83,19 +82,22 @@ export const buildProjects: SceneBuild = (tl, s, ctx) => {
     ctx.shared.lastCardRect = new DOMRect(last.left - stageRect.left - distance, last.top - stageRect.top, last.width, last.height);
   }
 
-  tl.fromTo(ctx.el, { xPercent: 100 }, { xPercent: 0, duration: 1, ease: "power3.out" }, s)
-    // Setelah menutup layar, langit milik adegan memudar sehingga langit global (sore → senja) terlihat.
-    .to(ctx.el.querySelector(".projects-sky"), { opacity: 0, duration: 0.6 }, s + 1)
-    // Cakrawala kembali di kejauhan.
+  ctx.fly(s, "projects", 1.3, { via: { px: 30, py: 20, pz: -225 } });
+  ctx.drift(s, { dx: 0 }, 0.6, "power1.out");
+  tl.fromTo(ctx.el, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power1.out" }, s + 0.6)
+    .fromTo(track, { xPercent: 6 }, { xPercent: 0, duration: 0.8, ease: "power3.out" }, s + 0.5)
+    // Cakrawala 2D cadangan kembali di kejauhan.
     .to(".cam-far", { scale: 1, opacity: 0.85, yPercent: 30, filter: "blur(0px)", duration: 0.8 }, s + 1);
 
-  const move = s + 1;
+  // Track bergeser ke kanan-panel = arah -z di dunia (galeri menghadap +x).
+  const move = s + 1.3;
   tl.to(track, { x: -distance, duration: D, ease: "none" }, move);
+  ctx.drift(move, { dz: -distance / ctx.S }, D);
   slots.forEach((slot) => tl.fromTo(slot, { rotate: 3, yPercent: 6 }, { rotate: -2, yPercent: -3, duration: D, ease: "none" }, move));
 
   // Keluar: semua memudar kecuali kartu terakhir (babak Reel tumbuh dari kartu itu).
   const out = move + D;
   const others = [ctx.el.querySelector(".projects-track > div:first-child"), ...slots.slice(0, -1)].filter(Boolean);
   tl.to(others, { opacity: 0, duration: 0.6 }, out);
-  return 1 + D + 1;
+  return 1.3 + D + 1;
 };

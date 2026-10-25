@@ -7,6 +7,10 @@ import { notFound } from "next/navigation";
 import { AosInit } from "@/components/AosInit";
 import { MascotSvg } from "@/components/mascot/MascotSvg";
 import { ProjectCover } from "@/components/ProjectCover";
+import { ProjectHero3D } from "@/components/ProjectHero3D";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { getProject } from "@/lib/data";
 
 export const revalidate = 3600;
@@ -36,7 +40,12 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
           Kembali ke cerita
         </Link>
 
-        <header className="mt-8">
+        <header className="relative mt-8">
+          {/* Bentuk low-poly 3D berwarna proyek melayang di sisi kanan header. */}
+          <div className="pointer-events-none absolute -inset-y-10 right-0 left-1/3 overflow-hidden xl:-right-24" aria-hidden>
+            <ProjectHero3D color={project.color} />
+          </div>
+          <div className="relative">
           <p className="font-semibold text-sisfor">
             {project.role} · {project.year}
           </p>
@@ -44,10 +53,11 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
           <p className="mt-5 max-w-[60ch] text-xl leading-relaxed text-ink-soft">{project.summary}</p>
           <div className="mt-6 flex flex-wrap gap-2">
             {project.tech.map((t) => (
-              <span key={t} className="rounded-full bg-paper-deep px-3 py-1 text-sm font-semibold text-ink">
+              <Badge key={t} variant="secondary" className="h-7 bg-paper-deep px-3 text-sm font-semibold text-ink">
                 {t}
-              </span>
+              </Badge>
             ))}
+          </div>
           </div>
         </header>
 
@@ -62,12 +72,12 @@ export default async function ProjectPage({ params }: PageProps<"/projects/[slug
             ))}
             <div className="flex flex-wrap gap-3 pt-4">
               {project.demoUrl ? (
-                <a href={project.demoUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-sisfor px-5 py-2.5 font-semibold text-paper hover:bg-sisfor-deep">
+                <a href={project.demoUrl} target="_blank" rel="noreferrer" className={cn(buttonVariants({ size: "lg" }), "h-11 rounded-full px-5 text-base font-semibold hover:bg-sisfor-deep")}>
                   Lihat demo <HugeiconsIcon icon={ArrowUpRight01Icon} size={18} />
                 </a>
               ) : null}
               {project.repoUrl ? (
-                <a href={project.repoUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-ink px-5 py-2.5 font-semibold text-paper hover:bg-ink-soft">
+                <a href={project.repoUrl} target="_blank" rel="noreferrer" className={cn(buttonVariants({ size: "lg" }), "h-11 rounded-full bg-ink px-5 text-base font-semibold text-paper hover:bg-ink-soft")}>
                   Kode sumber <HugeiconsIcon icon={ArrowUpRight01Icon} size={18} />
                 </a>
               ) : null}

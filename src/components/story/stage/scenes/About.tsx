@@ -56,16 +56,17 @@ export function AboutScene({ chapter, profile }: { chapter?: Chapter; profile: P
   );
 }
 
-/** Tentang: portal lingkaran terbuka dari pintu kampus, foto "tirai", teks naik baris demi baris. */
+/** Tentang: kamera menembus pintu kampus masuk ke ruang dalam; foto "tirai", teks naik baris demi baris. */
 export const buildAbout: SceneBuild = (tl, s, ctx) => {
   const q = <T extends Element = HTMLElement>(sel: string) => ctx.el.querySelector<T & HTMLElement>(sel);
-  const p = ctx.shared.doorPoint ?? { x: ctx.vw / 2, y: ctx.vh / 2 };
-  const at = `${p.x}px ${p.y}px`;
 
-  tl.fromTo(ctx.el, { clipPath: `circle(0% at ${at})` }, { clipPath: `circle(150% at ${at})`, duration: 1.1, ease: "power2.inOut" }, s)
-    .fromTo(q(".about-card"), { scale: 0.86, opacity: 0.4 }, { scale: 1, opacity: 1, duration: 1, ease: "power2.out" }, s + 0.2)
-    .fromTo(q(".about-photo"), { clipPath: "inset(45% 35% 45% 35% round 24px)" }, { clipPath: "inset(0% 0% 0% 0% round 24px)", duration: 1, ease: "power2.inOut" }, s + 0.6)
-    .fromTo(q(".about-photo img"), { scale: 1.35 }, { scale: 1, duration: 1.6, ease: "power1.out" }, s + 0.6);
+  // Kamera sudah di ambang pintu (lihat Hero) → masuk dan berhenti di depan dinding ruang.
+  ctx.fly(s + 0.8, "about", 1, { ease: "power2.out" });
+  // Panel baru tampil setelah kamera berada di dalam gedung (DOM selalu tergambar di atas kanvas).
+  tl.fromTo(ctx.el, { opacity: 0 }, { opacity: 1, duration: 0.45, ease: "power1.out" }, s + 0.75)
+    .fromTo(q(".about-card"), { scale: 0.86, opacity: 0.4 }, { scale: 1, opacity: 1, duration: 1, ease: "power2.out" }, s + 0.8)
+    .fromTo(q(".about-photo"), { clipPath: "inset(45% 35% 45% 35% round 24px)" }, { clipPath: "inset(0% 0% 0% 0% round 24px)", duration: 1, ease: "power2.inOut" }, s + 0.9)
+    .fromTo(q(".about-photo img"), { scale: 1.35 }, { scale: 1, duration: 1.6, ease: "power1.out" }, s + 0.9);
 
   const title = q(".about-title");
   if (title) tl.from(SplitText.create(title, { type: "words", mask: "words" }).words, { yPercent: 110, duration: 0.5, stagger: 0.06, ease: "power3.out" }, s + 1.2);
@@ -77,8 +78,8 @@ export const buildAbout: SceneBuild = (tl, s, ctx) => {
   const mascot = q(".about-mascot");
   if (mascot) tl.from(mascot, { xPercent: -80, opacity: 0, duration: 0.7, ease: "back.out(1.4)" }, s + 2.4);
 
-  // Keluar: kartu mengecil & naik, ruangan memudar ke langit siang.
+  // Keluar: kartu mengecil & naik saat kamera terbang menembus atap menuju jalan siang.
   const out = s + 3.6;
-  tl.to(q(".about-card"), { scale: 0.4, yPercent: -60, rotate: -5, opacity: 0, duration: 1, ease: "power2.in" }, out).to(ctx.el, { opacity: 0, duration: 0.8 }, out + 0.2);
+  tl.to(q(".about-card"), { scale: 0.4, yPercent: -60, rotate: -5, opacity: 0, duration: 0.8, ease: "power2.in" }, out).to(ctx.el, { opacity: 0, duration: 0.5 }, out + 0.3);
   return 4.6;
 };

@@ -3,6 +3,7 @@
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { Cloud } from "./Landscape";
+import { skyState } from "./world/rig";
 import { sceneStore } from "./stage/sceneStore";
 
 gsap.registerPlugin(useGSAP);
@@ -33,7 +34,8 @@ const STARS = Array.from({ length: 80 }, (_, i) => ({
 export function SkyBackdrop() {
   useGSAP(() => {
     const root = document.documentElement;
-    const state = { ...SKY.morning };
+    // Palet yang sama dibaca kubah langit WebGL (dunia 3D), jadi tween-nya cukup satu.
+    const state = Object.assign(skyState, SKY.morning);
     const apply = () => {
       root.style.setProperty("--sky-top", state.top);
       root.style.setProperty("--sky-bottom", state.bottom);

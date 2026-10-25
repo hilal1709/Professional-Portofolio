@@ -23,7 +23,7 @@ export function JourneyScene({ chapter, milestones }: { chapter?: Chapter; miles
       </div>
 
       <div className="journey-track relative flex h-full w-max flex-row">
-        <div className="absolute inset-x-0 bottom-0 h-[22vh]" aria-hidden>
+        <div className="journey-ground absolute inset-x-0 bottom-0 h-[22vh]" aria-hidden>
           <div className="absolute inset-x-0 top-0 h-10 bg-[#6f8f5a]" />
           <div className="absolute inset-x-0 bottom-0 top-8 bg-khaki" />
           <div className="absolute inset-x-0 top-[55%] border-t-4 border-dashed border-paper/90" />
@@ -63,7 +63,7 @@ export function JourneyScene({ chapter, milestones }: { chapter?: Chapter; miles
   );
 }
 
-/** Perjalanan: dunia bergeser horizontal sementara maskot berjalan, lalu kamera zoom masuk ke ransel. */
+/** Perjalanan: kamera turun ke jalan siang, papan milestone bergeser sementara dunia 3D ikut ber-parallax, lalu zoom masuk ke ransel. */
 export const buildJourney: SceneBuild = (tl, s, ctx) => {
   const track = ctx.el.querySelector<HTMLElement>(".journey-track")!;
   const distance = Math.max(0, track.scrollWidth - ctx.vw);
@@ -79,16 +79,19 @@ export const buildJourney: SceneBuild = (tl, s, ctx) => {
   const trackLeft = track.getBoundingClientRect().left;
   const signLefts = Array.from(ctx.el.querySelectorAll<HTMLElement>(".journey-sign"), (el) => [el, el.getBoundingClientRect().left - trackLeft] as const);
 
-  // Masuk: jalan naik dari bawah, maskot masuk dari kiri.
-  tl.fromTo(track, { yPercent: 70, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 1, ease: "power2.out" }, s)
-    .from(mascot, { xPercent: -160, duration: 1, ease: "power2.out" }, s + 0.2);
+  // Masuk: kamera keluar lewat atap kampus lalu turun ke jalan; papan naik dari bawah, maskot dari kiri.
+  ctx.fly(s, "journey", 1.4, { via: { py: 24 } });
+  tl.fromTo(ctx.el, { opacity: 0 }, { opacity: 1, duration: 0.4 }, s + 0.6)
+    .fromTo(track, { yPercent: 70, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.8, ease: "power2.out" }, s + 0.6)
+    .from(mascot, { xPercent: -160, duration: 0.8, ease: "power2.out" }, s + 0.8);
 
-  // Bergeser horizontal.
-  const move = s + 1;
+  // Bergeser horizontal: track DOM dan kamera dunia 3D bergerak sejauh yang sama → parallax alami.
+  const move = s + 1.4;
   tl.to(track, { x: -distance, duration: D, ease: "none" }, move).fromTo(ctx.el.querySelector(".journey-progress"), { scaleX: 0 }, { scaleX: 1, duration: D, ease: "none" }, move);
+  ctx.drift(move, { dx: distance / ctx.S }, D);
   signLefts.forEach(([sign, left]) => {
     const t = move + (distance ? ((left - ctx.vw * 0.8) / distance) * D : 0);
-    tl.from(sign, { yPercent: 45, rotate: -10, opacity: 0, duration: 0.45, ease: "back.out(1.7)" }, Math.max(s + 0.5, t));
+    tl.from(sign, { yPercent: 45, rotate: -10, opacity: 0, duration: 0.45, ease: "back.out(1.7)" }, Math.max(s + 0.9, t));
   });
 
   // Keluar: zoom masuk ke ransel maskot.
@@ -97,5 +100,5 @@ export const buildJourney: SceneBuild = (tl, s, ctx) => {
     .to(track, { opacity: 0, yPercent: 20, duration: 0.8, ease: "power2.in" }, out + 0.2)
     .to(mascot, { scale: 14, transformOrigin: `${packX - box.left}px ${packY - box.top}px`, duration: 1.4, ease: "power3.in" }, out);
   ctx.passThrough(out + 0.3, 1.1);
-  return 1 + D + 1.6;
+  return 1.4 + D + 1.6;
 };
