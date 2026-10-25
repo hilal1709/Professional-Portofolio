@@ -176,7 +176,8 @@ export function buildRoom(mat: Material, foliage: Material, models: Models) {
   // Sedikit lebih rendah dari gedung luar supaya atap merahnya tidak z-fighting dengan langit-langit.
   const roomH = campus.h - 0.7;
   const box = new BoxGeometry(campus.w - 0.6, roomH, campus.d - 0.6, 8, 6, 8).toNonIndexed();
-  box.translate(campus.x, roomH / 2, campus.z);
+  // Lantai sedikit di atas tanah (y = 0) supaya tidak z-fighting/berkedip dengan bidang tanah dunia.
+  box.translate(campus.x, roomH / 2 + 0.04, campus.z);
   const pos = box.attributes.position;
   const normal = box.attributes.normal;
   const colors = new Float32Array(normal.count * 3);

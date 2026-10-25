@@ -149,7 +149,7 @@ export function buildLife(mat: Material, models: Models, q: Quality) {
   const cityBirds = flock(city, mat, lite ? 5 : 7, { x: 0, y: 26, z: -70 }, 34, 0.12, rand);
   const petals = drift(city, mat, lite ? 30 : 70, { x: [-22, 22], y: [1, 15], z: [-30, -4] }, { x: 1.2, z: 0.3 }, ["#ffd1dc", "#fbf3e4", "#ffb48a", "#f7e08a"], rand);
 
-  // Layang-layang di atas kota, talinya ke tanah di belakang kampus.
+  // Layang-layang di atas kota; talinya turun ke belakang (menjauhi kamera), tidak menembus gedung kampus.
   const kiteGeo = new Parts().box(1.3, 1.3, 0.05, "#ffffff", { rz: Math.PI / 4 }, 0.02).geometry();
   kiteGeo.scale(1, 1.35, 1);
   const tail = new Parts().box(0.06, 1.8, 0.02, "#4a4038", { y: -2.1 }, 0.01);
@@ -169,7 +169,7 @@ export function buildLife(mat: Material, models: Models, q: Quality) {
       const x = k.x + Math.sin(t * 0.4 + k.ph) * 1.4;
       const y = k.y + Math.sin(t * 0.6 + k.ph) * 0.7;
       kites.set(i, matrixOf({ x, y, z: k.z, rz: Math.sin(t * 0.8 + k.ph) * 0.25 }, _m));
-      strings.set([x, y - 1, k.z, k.x * 0.6, 0, k.z + 22], i * 6);
+      strings.set([x, y - 1, k.z, k.x * 1.1, 0, k.z - 14], i * 6);
     });
     kites.flush();
     lineGeo.attributes.position.needsUpdate = true;
